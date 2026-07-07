@@ -17,8 +17,9 @@ python manage.py seed_demo     # demo workspace + users
 python manage.py runserver
 ```
 
-Open http://127.0.0.1:8000 — sign in as `admin` / `ravi` / `nisha`,
-password `hibiscus2026`. Django admin lives at `/admin/`.
+Open http://127.0.0.1:8000 — the **landing page** is the home page; the CRM app
+is at **`/app`**. Sign in as `admin` / `ravi` / `nisha`, password `hibiscus2026`.
+Django admin lives at `/admin/`.
 
 ## ✦ Copilot — the gap nobody else fills
 

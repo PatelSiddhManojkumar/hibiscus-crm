@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hibiscus — The CRM that runs itself</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* ─────────────────────────────────────────────────────────────
+   HIBISCUS landing — editorial, warm, agentic.
+   Palette (pinned design system): Amaranth #933B5B · Thulian #B5728A
+   · Brook #AABAAE · Chalk #E3D6BF · Pomelo Olive #9F9679.
+   Contrast via opacity/mix only. No gradients, no blue, no purple.
+   Type: Georgia (editorial display) / system sans (UI) / mono (data).
+   Two themes: warm-light default, warm-dark via tokens.
+   ───────────────────────────────────────────────────────────── */
+:root{
+  --amaranth:#933B5B; --thulian:#B5728A; --brook:#AABAAE; --chalk:#E3D6BF; --olive:#9F9679;
+  --ground:#E7DCC7; --surface:#EDE3CE; --surface-2:#F1E9D8;
+  --ink:#4a4436; --ink-strong:#7a2e47; --muted:#9a9179;
+  --amaranth-ink:#933B5B; --brook-ink:#5f7466; --thulian-ink:#8a4f66;
+  --line:rgba(159,150,121,.28); --line-strong:rgba(159,150,121,.5);
+  --hover:rgba(147,59,91,.06); --shadow:0 24px 64px rgba(147,59,91,.14);
+  --serif:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --ground:#1c1013; --surface:#251519; --surface-2:#2c191f;
+    --ink:#d9c9b4; --ink-strong:#e7d6c0; --muted:#a08d7a;
+    --amaranth-ink:#d98aa6; --brook-ink:#aabaae; --thulian-ink:#d3a3b6;
+    --line:rgba(227,214,191,.16); --line-strong:rgba(227,214,191,.3);
+    --hover:rgba(217,138,166,.08); --shadow:0 24px 64px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="light"]{
+  --ground:#E7DCC7; --surface:#EDE3CE; --surface-2:#F1E9D8;
+  --ink:#4a4436; --ink-strong:#7a2e47; --muted:#9a9179;
+  --amaranth-ink:#933B5B; --brook-ink:#5f7466; --thulian-ink:#8a4f66;
+  --line:rgba(159,150,121,.28); --line-strong:rgba(159,150,121,.5);
+  --hover:rgba(147,59,91,.06); --shadow:0 24px 64px rgba(147,59,91,.14);
+}
+:root[data-theme="dark"]{
+  --ground:#1c1013; --surface:#251519; --surface-2:#2c191f;
+  --ink:#d9c9b4; --ink-strong:#e7d6c0; --muted:#a08d7a;
+  --amaranth-ink:#d98aa6; --brook-ink:#aabaae; --thulian-ink:#d3a3b6;
+  --line:rgba(227,214,191,.16); --line-strong:rgba(227,214,191,.3);
+  --hover:rgba(217,138,166,.08); --shadow:0 24px 64px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+a{color:inherit;text-decoration:none}
+.serif{font-family:var(--serif)}
+.mono{font-family:var(--mono)}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--amaranth-ink)}
+h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--ink-strong);text-wrap:balance;letter-spacing:-.02em}
+em{font-style:italic;color:var(--amaranth-ink)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--sans);font-size:15px;font-weight:600;
+  padding:13px 26px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:transform .1s ease,background .12s,box-shadow .12s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--amaranth);color:#F1E9D8}
+.btn-primary:hover{background:var(--thulian);box-shadow:0 8px 24px rgba(147,59,91,.22)}
+.btn-ghost{color:var(--amaranth-ink);font-weight:600}
+.btn-ghost:hover{color:var(--thulian-ink)}
+
+/* nav */
+nav{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);background:color-mix(in srgb,var(--ground) 82%,transparent);
+  border-bottom:1px solid var(--line)}
+.nav-in{display:flex;align-items:center;gap:28px;height:64px}
+.logo{font-family:var(--serif);font-size:23px;color:var(--amaranth-ink);letter-spacing:-.02em}
+.logo b{font-style:italic;font-weight:400}
+.nav-links{display:flex;gap:26px;font-size:14px;color:var(--ink)}
+.nav-links a:hover{color:var(--amaranth-ink)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:18px}
+.theme-toggle{background:none;border:1px solid var(--line-strong);color:var(--ink);width:34px;height:34px;border-radius:8px;
+  cursor:pointer;font-size:15px;display:grid;place-items:center;transition:background .12s}
+.theme-toggle:hover{background:var(--hover)}
+
+/* hero */
+.hero{padding:76px 0 64px;display:grid;grid-template-columns:1.05fr 1fr;gap:56px;align-items:center}
+.hero h1{font-size:clamp(42px,6vw,76px);line-height:1.02;margin:22px 0 24px}
+.hero .sub{font-size:19px;color:var(--ink);max-width:520px}
+.hero .metarow{font-family:var(--mono);font-size:12.5px;color:var(--muted);margin:26px 0 30px;display:flex;flex-wrap:wrap;gap:10px}
+.hero .metarow span:not(:last-child)::after{content:"·";margin-left:10px;opacity:.5}
+.cta-row{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.install{font-family:var(--mono);font-size:12.5px;color:var(--muted);margin-top:20px}
+.install code{background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:2px 7px;color:var(--ink)}
+
+/* live copilot terminal */
+.term{background:var(--surface);border:1px solid var(--line-strong);border-radius:14px;box-shadow:var(--shadow);
+  overflow:hidden;font-family:var(--mono);min-height:428px;display:flex;flex-direction:column}
+.term-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.term-bar .dot{width:11px;height:11px;border-radius:50%;background:var(--line-strong)}
+.term-bar .ttl{margin-left:8px;font-size:12px;color:var(--muted);letter-spacing:.5px}
+.term-bar .badge{margin-left:auto;font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--amaranth-ink);
+  background:rgba(181,114,138,.16);padding:3px 9px;border-radius:20px}
+.term-body{padding:20px;flex:1;font-size:13.5px;line-height:1.7}
+.t-you{color:var(--ink-strong);font-weight:600;background:rgba(181,114,138,.14);border-radius:7px;padding:9px 12px;margin-bottom:14px;min-height:1.6em}
+.t-you::before{content:"› ";color:var(--amaranth-ink)}
+.t-cursor{display:inline-block;width:8px;height:1.05em;background:var(--amaranth);vertical-align:-2px;margin-left:1px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.t-step{opacity:0;transform:translateY(4px);transition:opacity .28s ease,transform .28s ease;margin:5px 0}
+.t-step.in{opacity:1;transform:none}
+.t-think{color:var(--muted);font-style:italic}
+.t-tool{background:var(--ground);border:1px solid var(--line);border-radius:6px;padding:8px 11px;color:var(--ink)}
+.t-tool b{color:var(--amaranth-ink)}
+.t-tool .args{color:var(--muted);font-size:11.5px}
+.t-result{color:var(--brook-ink);font-weight:600}
+.t-result::before{content:"✓ "}
+.t-summary{margin-top:12px;padding-top:11px;border-top:1px solid var(--line);color:var(--ink-strong);font-family:var(--sans);font-size:14px}
+
+/* section scaffold */
+section{padding:104px 0}
+.band{background:var(--surface)}
+.sec-head{max-width:680px}
+.sec-head h2{font-size:clamp(30px,4.4vw,46px);line-height:1.08;margin:14px 0 14px}
+.sec-head p{font-size:18px;color:var(--muted)}
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.6,.2,1),transform .7s cubic-bezier(.2,.6,.2,1)}
+.reveal.in{opacity:1;transform:none}
+
+/* the gap — editorial statement */
+.gap-quote{font-family:var(--serif);font-size:clamp(28px,4.2vw,48px);line-height:1.16;color:var(--ink-strong);max-width:15ch}
+.gap-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:56px;border-top:1px solid var(--line-strong)}
+.gap-col{padding:34px 36px}
+.gap-col:first-child{border-right:1px solid var(--line)}
+.gap-col .k{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px}
+.gap-col.old .k{color:var(--muted)}
+.gap-col.new .k{color:var(--amaranth-ink)}
+.gap-col ul{list-style:none;display:flex;flex-direction:column;gap:13px}
+.gap-col li{font-size:15.5px;padding-left:24px;position:relative}
+.gap-col.old li{color:var(--muted)}
+.gap-col.old li::before{content:"×";position:absolute;left:0;color:var(--olive)}
+.gap-col.new li{color:var(--ink)}
+.gap-col.new li::before{content:"→";position:absolute;left:0;color:var(--amaranth-ink);font-weight:700}
+
+/* tools grid */
+.tools{display:grid;grid-template-columns:repeat(6,1fr);gap:18px;margin-top:52px}
+.tool{background:var(--ground);border:1px solid var(--line);border-radius:14px;padding:28px;grid-column:span 2;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s}
+.band .tool{background:var(--surface-2)}
+.tool:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(147,59,91,.1);border-color:var(--line-strong)}
+.tool.feature{grid-column:span 6;display:grid;grid-template-columns:1.1fr 1fr;gap:36px;align-items:center;padding:40px}
+.tool .ic{width:34px;height:34px;color:var(--amaranth-ink);margin-bottom:16px}
+.tool h3{font-size:22px;margin-bottom:9px}
+.tool.feature h3{font-size:30px}
+.tool p{font-size:14.5px;color:var(--muted)}
+.tool.feature p{font-size:16px;color:var(--ink)}
+.tool .tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--amaranth-ink);background:rgba(181,114,138,.15);padding:3px 9px;border-radius:4px;margin-bottom:14px}
+.mini-flow{font-family:var(--mono);font-size:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;line-height:1.9}
+.mini-flow .l1{color:var(--ink-strong);font-weight:600}
+.mini-flow .l2{color:var(--muted)}
+.mini-flow .l3{color:var(--amaranth-ink)}
+.mini-flow .l4{color:var(--brook-ink)}
+
+/* proof stats */
+.proof{display:grid;grid-template-columns:repeat(4,1fr)}
+.proof .st{padding:8px 28px}
+.proof .st + .st{border-left:1px solid var(--line)}
+.proof .n{font-family:var(--serif);font-size:clamp(38px,5vw,58px);color:var(--amaranth-ink);line-height:1;font-variant-numeric:tabular-nums}
+.proof .l{font-size:13px;color:var(--muted);margin-top:10px;max-width:190px}
+
+/* pricing */
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:840px;margin-top:48px}
+.plan{background:var(--ground);border:1px solid var(--line);border-radius:16px;padding:38px}
+.band .plan{background:var(--surface-2)}
+.plan.hot{border-color:var(--amaranth);position:relative}
+.plan.hot::after{content:"MOST POPULAR";position:absolute;top:-1px;right:24px;transform:translateY(-50%);
+  font-family:var(--mono);font-size:9px;letter-spacing:1.5px;background:var(--amaranth);color:#F1E9D8;padding:4px 10px;border-radius:20px}
+.plan .price{font-family:var(--serif);font-size:52px;color:var(--ink-strong);margin:14px 0 6px;font-variant-numeric:tabular-nums}
+.plan .price small{font-family:var(--sans);font-size:16px;color:var(--muted)}
+.plan p{color:var(--muted);font-size:14.5px;margin-bottom:26px;min-height:44px}
+.plan .btn{width:100%;justify-content:center}
+.price-note{max-width:840px;margin-top:26px;font-style:italic;color:var(--muted);font-size:14.5px}
+
+/* final */
+.final{background:var(--amaranth);color:#F1E9D8;text-align:center;padding:132px 32px}
+.final h2{color:#F1E9D8;font-size:clamp(40px,6vw,72px);line-height:1.04;margin-bottom:14px}
+.final p{color:rgba(241,233,216,.82);font-size:18px;max-width:520px;margin:0 auto 36px}
+.final .btn{background:#F1E9D8;color:var(--amaranth);font-size:16px;padding:16px 40px}
+.final .btn:hover{background:#fff}
+.final .made{font-family:var(--mono);font-size:12px;font-style:italic;color:rgba(241,233,216,.6);margin-top:30px}
+
+footer{padding:40px 0;border-top:1px solid var(--line);display:flex;gap:22px;align-items:center;font-size:13px;color:var(--muted)}
+footer .logo{font-size:18px}
+footer .fr{margin-left:auto;display:flex;gap:20px}
+footer a:hover{color:var(--amaranth-ink)}
+
+@media (max-width:920px){
+  .hero{grid-template-columns:1fr;gap:40px;padding-top:52px}
+  .nav-links{display:none}
+  .gap-grid,.plans{grid-template-columns:1fr}
+  .gap-col:first-child{border-right:none;border-bottom:1px solid var(--line)}
+  .tools{grid-template-columns:1fr}
+  .tool,.tool.feature{grid-column:auto}
+  .tool.feature{grid-template-columns:1fr}
+  .proof{grid-template-columns:1fr 1fr}
+  .proof .st:nth-child(3){border-left:none}
+  .proof .st{border-top:1px solid var(--line);padding:22px 0}
+  .proof .st:nth-child(-n+2){border-top:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .reveal{opacity:1;transform:none;transition:none}
+  .t-cursor{animation:none}
+}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap nav-in">
+  <a class="logo" href="#top">Hibi<b>scus</b></a>
+  <div class="nav-links">
+    <a href="#gap">The gap</a><a href="#tools">Tools</a><a href="#pricing">Pricing</a>
+  </div>
+  <div class="nav-right">
+    <button class="theme-toggle" id="theme" aria-label="Toggle theme">◐</button>
+    <a class="btn-ghost" href="/app">Sign in</a>
+    <a class="btn btn-primary" href="/app" style="padding:9px 18px;font-size:14px">Start free</a>
+  </div>
+</div></nav>
+
+<a id="top"></a>
+<header class="hero wrap">
+  <div>
+    <div class="eyebrow">Hibiscus · Customer Relationship Operating System</div>
+    <h1>The CRM that <em>runs itself.</em></h1>
+    <p class="sub">Every other CRM makes you the data-entry robot — logging calls,
+    dragging cards, updating fields. Hibiscus flips it. You give the instruction;
+    it operates the pipeline for you.</p>
+    <div class="metarow">
+      <span>AGENTIC COPILOT</span><span>SELF-HOSTED OR CLOUD</span><span>NO PER-SEAT PRICING</span>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/app">Start free</a>
+      <a class="btn-ghost" href="#tools">See it operate →</a>
+    </div>
+    <p class="install">Or run it locally: <code>pip install hibiscus-cli</code> — two minutes.</p>
+  </div>
+
+  <div class="term" id="term" aria-label="Live Copilot demo">
+    <div class="term-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="ttl">hibiscus · copilot</span>
+      <span class="badge">✦ AGENT</span>
+    </div>
+    <div class="term-body">
+      <div class="t-you" id="t-you"><span class="t-cursor"></span></div>
+      <div id="t-steps"></div>
+    </div>
+  </div>
+</header>
+
+<!-- THE GAP -->
+<section class="band" id="gap">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">The gap nobody filled</div>
+      <p class="gap-quote">A CRM should be an operator, not a filing cabinet.</p>
+    </div>
+    <div class="gap-grid reveal">
+      <div class="gap-col old">
+        <div class="k">Every CRM you've tried</div>
+        <ul>
+          <li>You update the deal stage by hand, one drag at a time</li>
+          <li>You remember to log the call, or it never happened</li>
+          <li>Reports are dashboards you assemble, then screenshot</li>
+          <li>"Automation" means a rigid if-this-then-that with no escape hatch</li>
+          <li>Per-seat pricing punishes you for adding your team</li>
+        </ul>
+      </div>
+      <div class="gap-col new">
+        <div class="k">Hibiscus</div>
+        <ul>
+          <li>"Move the Porto deal to won and raise the invoice task" — done</li>
+          <li>Copilot logs, links, and timestamps the activity as you speak it</li>
+          <li>Reports are documents — narrative + charts — that export as real PDFs</li>
+          <li>Automations run actual sandboxed scripts when the rules run out</li>
+          <li>One price. Unlimited seats. Self-host the whole thing for free</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section id="tools">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Six tools, built for operators</div>
+      <h2>World-class where it counts.</h2>
+      <p>Not sixty half-features. Six that a person who lives in the tool for six hours a day will actually feel.</p>
+    </div>
+    <div class="tools">
+      <div class="tool feature reveal">
+        <div>
+          <span class="tag">✦ The one nobody else has</span>
+          <h3 class="serif">Copilot operates the CRM through its own tools.</h3>
+          <p>Type an instruction in plain English. Copilot writes a plan, calls the
+          same create-contact / move-deal / log-activity / run-report tools the UI
+          uses, and shows its work step by step. It's not a chatbot bolted on — it
+          drives the product.</p>
+        </div>
+        <div class="mini-flow" aria-hidden="true">
+          <div class="l1">› Move Q3 Bulk Order to negotiation and remind me to send the proforma tomorrow</div>
+          <div class="l2">◇ Two steps: advance the deal, then create a dated task.</div>
+          <div class="l3">→ move_deal <span class="l2">{deal:"Q3 Bulk Order", stage:"negotiation"}</span></div>
+          <div class="l4">✓ Moved to Negotiation, probability now 70%</div>
+          <div class="l3">→ create_task <span class="l2">{title:"Send proforma", due_in_days:1}</span></div>
+          <div class="l4">✓ Task created, due tomorrow</div>
+        </div>
+      </div>
+
+      <div class="tool reveal">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="10" rx="1"/><rect x="17" y="4" width="4" height="13" rx="1"/></svg>
+        <h3 class="serif">Deals</h3>
+        <p>Kanban and table, forecast rollups, probability-weighted pipeline value that updates the moment a card moves.</p>
+      </div>
+      <div class="tool reveal">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19V5m0 14h14"/><path d="m8 14 3-4 3 2 4-6"/></svg>
+        <h3 class="serif">Reports</h3>
+        <p>Documents, not dashboards. Narrative next to charts, exported to a PDF that looks like a designer made it.</p>
+      </div>
+      <div class="tool reveal">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 3v3m0 12v3m9-9h-3M6 12H3m14.5-5.5-2 2m-7 7-2 2m11 0-2-2m-7-7-2-2"/></svg>
+        <h3 class="serif">Automations</h3>
+        <p>If-this-then-that until you outgrow it — then drop into a sandboxed script with a 10-second budget.</p>
+      </div>
+      <div class="tool reveal">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+        <h3 class="serif">Unified inbox</h3>
+        <p>Email, calls, and WhatsApp threaded per contact — every touch stamped onto one editorial timeline.</p>
+      </div>
+      <div class="tool reveal">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/></svg>
+        <h3 class="serif">Keyboard-first</h3>
+        <p>Every action has a key. ⌘K to command, ⌘J for Copilot, G-then-D for deals. Your hands never leave home row.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROOF -->
+<section class="band">
+  <div class="wrap">
+    <div class="proof reveal">
+      <div class="st"><div class="n" data-to="4200" data-suffix="+">0</div><div class="l">Contacts managed daily across active workspaces</div></div>
+      <div class="st"><div class="n" data-to="0.4" data-suffix="s" data-dec="1">0</div><div class="l">Median response on the contacts table, at 10K rows</div></div>
+      <div class="st"><div class="n" data-to="5" data-suffix="">0</div><div class="l">CRM tools Copilot can call on your behalf, today</div></div>
+      <div class="st"><div class="n" data-to="3" data-suffix=" min">0</div><div class="l">From clone to a running, self-hosted workspace</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Pricing</div>
+      <h2>Two plans. No enterprise-tier games.</h2>
+    </div>
+    <div class="plans reveal">
+      <div class="plan">
+        <div class="eyebrow">Self-hosted</div>
+        <div class="price">Free</div>
+        <p>Full source, install anywhere, unlimited users, community support.</p>
+        <a class="btn btn-ghost" href="/app" style="border:1px solid var(--line-strong)">Get the source</a>
+      </div>
+      <div class="plan hot">
+        <div class="eyebrow">Hosted</div>
+        <div class="price">₹499 <small>/ month</small></div>
+        <p>We run it. Unlimited seats. Nightly backups. Copilot included. Email support.</p>
+        <a class="btn btn-primary" href="/app">Start free trial</a>
+      </div>
+    </div>
+    <p class="price-note reveal">No per-seat and no per-contact pricing — ever. Need enterprise support? Email us and we'll figure it out like adults.</p>
+  </div>
+</section>
+
+<!-- FINAL -->
+<section class="final">
+  <h2 class="serif">Stop feeding the CRM.<br>Start <em style="color:#F1E9D8;font-style:italic">commanding</em> it.</h2>
+  <p>Give Hibiscus an afternoon. Give your team a tool that does the busywork so they don't.</p>
+  <a class="btn" href="/app">Start free</a>
+  <div class="made">Built in India. Runs anywhere. Made for operators.</div>
+</section>
+
+<footer class="wrap">
+  <span class="logo serif">Hibi<b style="font-style:italic;font-weight:400">scus</b></span>
+  <span>© 2026</span>
+  <div class="fr"><a href="#gap">The gap</a><a href="#tools">Tools</a><a href="#pricing">Pricing</a></div>
+</footer>
+
+<script>
+(function(){
+  var reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+  /* theme toggle */
+  var root=document.documentElement, tt=document.getElementById('theme');
+  tt.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+    root.setAttribute('data-theme', cur==='dark'?'light':'dark');
+  });
+
+  /* scroll reveal */
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:.14});
+  document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+
+  /* count-up */
+  function countUp(el){
+    var to=parseFloat(el.dataset.to), dec=parseInt(el.dataset.dec||'0'), suf=el.dataset.suffix||'', t0=null, dur=1300;
+    function step(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/dur,1); var e=1-Math.pow(1-p,3);
+      el.textContent=(to*e).toFixed(dec)+suf; if(p<1)requestAnimationFrame(step); else el.textContent=to.toFixed(dec)+suf; }
+    requestAnimationFrame(step);
+  }
+  var pio=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ if(reduce){e.target.textContent=parseFloat(e.target.dataset.to).toFixed(parseInt(e.target.dataset.dec||'0'))+(e.target.dataset.suffix||'');}else countUp(e.target); pio.unobserve(e.target);} });
+  },{threshold:.6});
+  document.querySelectorAll('.proof .n').forEach(function(el){pio.observe(el);});
+
+  /* ── live Copilot terminal ── */
+  var runs=[
+    {q:"Move the Porto deal to won and add a task to raise the invoice",
+     steps:[
+      {t:'think',x:'Two steps — advance the deal, then create the follow-up task.'},
+      {t:'tool',n:'move_deal',a:'{deal:"Porto Ceramics", stage:"won"}'},
+      {t:'res',x:'Moved Retail Line Extension to Won'},
+      {t:'tool',n:'create_task',a:'{title:"Raise invoice — Porto"}'},
+      {t:'res',x:'Task created, assigned to you'},
+     ], sum:"Closed the Porto deal and queued the invoice task. Anything else?"},
+    {q:"Log a call with Meera about the split delivery, then show pipeline health",
+     steps:[
+      {t:'think',x:'Log the activity on Meera, then run the report.'},
+      {t:'tool',n:'log_activity',a:'{contact:"Meera", kind:"call"}'},
+      {t:'res',x:'Call logged, last-contacted updated to just now'},
+      {t:'tool',n:'run_report',a:'{}'},
+      {t:'res',x:'Open pipeline ₹1.42Cr · weighted ₹68.4L'},
+     ], sum:"Logged the call and pulled the numbers. Pipeline's up on last month."},
+    {q:"Add contact Priya Nair at Kollam Spices as a prospect",
+     steps:[
+      {t:'think',x:'One step — create the contact and its company.'},
+      {t:'tool',n:'create_contact',a:'{name:"Priya Nair", company:"Kollam Spices"}'},
+      {t:'res',x:'Created contact #482, stage Prospect'},
+     ], sum:"Priya's in as a prospect under Kollam Spices."},
+  ];
+  var you=document.getElementById('t-you'), steps=document.getElementById('t-steps'), ri=0;
+  var cursor='<span class="t-cursor"></span>';
+  function wait(ms){return new Promise(function(r){setTimeout(r,ms);});}
+  async function type(str){
+    you.innerHTML='';
+    for(var i=0;i<str.length;i++){ you.innerHTML=str.slice(0,i+1)+cursor; await wait(reduce?0:24); }
+    you.innerHTML=str;
+  }
+  function addStep(s){
+    var d=document.createElement('div'); d.className='t-step';
+    if(s.t==='think'){ d.className+=' t-think'; d.textContent='◇ '+s.x; }
+    else if(s.t==='tool'){ d.className+=' t-tool'; d.innerHTML='→ <b>'+s.n+'</b> <span class="args">'+s.a+'</span>'; }
+    else { d.className+=' t-result'; d.textContent=s.x; }
+    steps.appendChild(d); requestAnimationFrame(function(){d.classList.add('in');});
+  }
+  async function play(){
+    var run=runs[ri];
+    steps.innerHTML='';
+    await type(run.q);
+    await wait(420);
+    for(var i=0;i<run.steps.length;i++){ addStep(run.steps[i]); await wait(reduce?120:640); }
+    var sm=document.createElement('div'); sm.className='t-step t-summary'; sm.textContent=run.sum;
+    steps.appendChild(sm); requestAnimationFrame(function(){sm.classList.add('in');});
+    await wait(reduce?1600:3400);
+    ri=(ri+1)%runs.length;
+    play();
+  }
+  play();
+})();
+</script>
+
+</body>
+</html>
