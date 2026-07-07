@@ -1,9 +1,10 @@
-# Darvin CRM
+# Hibiscus CRM
 
 A full-stack CRM in the workshop-not-showroom tradition: dense, keyboard-driven,
 editorial. Django + DRF backend, zero-build single-page frontend, five-color
-design system. Darvin is the productionized, advanced version of the
-[Hibiscus CRM design mockups](https://github.com/PatelSiddhManojkumar/hibiscus-crm-design).
+design system. This is the productionized, advanced version of the
+[Hibiscus design mockups](https://github.com/PatelSiddhManojkumar/hibiscus-crm-design) —
+a working application, not screens.
 
 ## Quick start
 
@@ -17,7 +18,7 @@ python manage.py runserver
 ```
 
 Open http://127.0.0.1:8000 — sign in as `admin` / `ravi` / `nisha`,
-password `darvin2026`. Django admin lives at `/admin/`.
+password `hibiscus2026`. Django admin lives at `/admin/`.
 
 ## What's inside
 
@@ -40,7 +41,7 @@ Domain behavior baked in:
 - Contact merge moves activities, deals, tasks, and tags, then deletes the duplicate.
 - Custom fields on contacts via a JSON field.
 
-**Frontend — one template + `static/darvin.js`, no build step.**
+**Frontend — one template + `static/hibiscus.js`, no build step.**
 Hash-routed SPA wired to the API: contacts table (live search, stage filter
 chips, density toggle), contact detail (identity card + grouped timeline +
 add-note/log-call), deals kanban with **drag-and-drop that persists** via
@@ -56,11 +57,11 @@ filter · `Esc` closes everything.
 Five colors only (contrast via opacity, never new hues): Amaranth `#933B5B`,
 Thulian `#B5728A`, Brook `#AABAAE`, Chalk `#E3D6BF`, Pomelo Olive `#9F9679`.
 Fraunces for headlines and empty states, Inter for operational UI, JetBrains
-Mono for data. Full token sheet in `static/darvin.css`; the component
+Mono for data. Full token sheet in `static/hibiscus.css`; the component
 reference lives in the design repo.
 
 ## Production notes
 
-- Set `DARVIN_SECRET_KEY`, `DARVIN_DEBUG=0`, `DARVIN_ALLOWED_HOSTS`.
+- Set `HIBISCUS_SECRET_KEY`, `HIBISCUS_DEBUG=0`, `HIBISCUS_ALLOWED_HOSTS`.
 - `python manage.py collectstatic` — WhiteNoise serves static files.
 - Swap `DATABASES` to Postgres for real deployments.

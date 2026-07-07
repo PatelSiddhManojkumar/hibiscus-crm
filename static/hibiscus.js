@@ -1,10 +1,10 @@
-/* Darvin CRM — single-page app. Hash routing, token auth, live DRF backend. */
+/* Hibiscus CRM — single-page app. Hash routing, token auth, live DRF backend. */
 "use strict";
 
 // ── API client ───────────────────────────────────────────────
 const API = {
-  token: localStorage.getItem("darvin_token"),
-  user: JSON.parse(localStorage.getItem("darvin_user") || "null"),
+  token: localStorage.getItem("hibiscus_token"),
+  user: JSON.parse(localStorage.getItem("hibiscus_user") || "null"),
   async req(path, opts = {}) {
     const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
     if (this.token) headers.Authorization = `Token ${this.token}`;
@@ -19,12 +19,12 @@ const API = {
   async login(username, password) {
     const data = await this.req("/auth/login/", { method: "POST", body: JSON.stringify({ username, password }) });
     this.token = data.token; this.user = data.user;
-    localStorage.setItem("darvin_token", data.token);
-    localStorage.setItem("darvin_user", JSON.stringify(data.user));
+    localStorage.setItem("hibiscus_token", data.token);
+    localStorage.setItem("hibiscus_user", JSON.stringify(data.user));
   },
   logout() {
     this.token = null; this.user = null;
-    localStorage.removeItem("darvin_token"); localStorage.removeItem("darvin_user");
+    localStorage.removeItem("hibiscus_token"); localStorage.removeItem("hibiscus_user");
     location.hash = "#/login"; render();
   },
 };
@@ -75,7 +75,7 @@ function shell(active, crumbs, body) {
   <div class="app">
     <aside class="sidebar">
       <div class="workspace"><span class="avatar deep">DV</span>
-        <div><strong>Darvin</strong><span>workspace · self-hosted</span></div></div>
+        <div><strong>Hibiscus</strong><span>workspace · self-hosted</span></div></div>
       ${nav}
       <div class="sidebar-foot">
         <span class="avatar">${initials(API.user ? `${API.user.first_name} ${API.user.last_name}` : API.user?.username)}</span>
@@ -168,18 +168,18 @@ function modal(html, onMount) {
 function loginView() {
   root.innerHTML = `
   <div class="login-wrap">
-    <div class="login-brand"><span class="logo">Darvin</span>
+    <div class="login-brand"><span class="logo">Hibiscus</span>
       <h1>The workshop,<br>not the showroom.</h1>
-      <div class="foot">Darvin CRM · self-hosted · made for operators</div></div>
+      <div class="foot">Hibiscus CRM · self-hosted · made for operators</div></div>
     <div class="login-form"><div class="form-card">
       <h2 class="serif" style="font-size:28px;font-weight:300">Welcome back.</h2>
       <p class="muted" style="margin:4px 0 24px">Sign in to your workspace.</p>
       <form id="login-form">
         <div class="field" style="margin-bottom:14px"><label>Username</label><input class="input" name="username" value="admin" autocomplete="username"></div>
-        <div class="field" style="margin-bottom:20px"><label>Password</label><input class="input" type="password" name="password" placeholder="darvin2026" autocomplete="current-password"></div>
+        <div class="field" style="margin-bottom:20px"><label>Password</label><input class="input" type="password" name="password" placeholder="hibiscus2026" autocomplete="current-password"></div>
         <button class="btn btn-primary" style="width:100%;justify-content:center">Sign in</button>
         <div class="error-note" id="login-err"></div>
-        <p class="meta" style="margin-top:20px">Demo: admin / ravi / nisha — password darvin2026</p>
+        <p class="meta" style="margin-top:20px">Demo: admin / ravi / nisha — password hibiscus2026</p>
       </form>
     </div></div>
   </div>`;
@@ -465,7 +465,7 @@ async function reportsView() {
         </svg>
         <figcaption>FIG 2 · DEALS MARKED WON · GROUPED BY STAGE-CHANGE MONTH</figcaption></figure>
       <p style="font-size:15px;line-height:1.7" class="muted">This report renders from live workspace data.
-      Values are direct-labeled by design — the Darvin palette is intentionally muted, so identity never rides on color alone.</p>
+      Values are direct-labeled by design — the Hibiscus palette is intentionally muted, so identity never rides on color alone.</p>
     </article>`);
   wireShell();
 }

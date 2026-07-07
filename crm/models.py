@@ -1,4 +1,4 @@
-"""Darvin CRM core models: companies, contacts, deals, activities, tasks, automations."""
+"""Hibiscus CRM core models: companies, contacts, deals, activities, tasks, automations."""
 from django.conf import settings
 from django.db import models
 

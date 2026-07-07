@@ -434,7 +434,7 @@ td .name { font-weight: 500; color: var(--amaranth-deep); }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
 }
 
-/* ═══ Darvin SPA additions ═══ */
+/* ═══ Hibiscus SPA additions ═══ */
 .detail { display: grid; grid-template-columns: 35% 1fr; gap: 32px; align-items: start; }
 @media (max-width: 900px) { .detail { grid-template-columns: 1fr; } }
 .identity h1 { font-size: 32px; font-weight: 300; margin: 16px 0 2px; letter-spacing: -.5px; }

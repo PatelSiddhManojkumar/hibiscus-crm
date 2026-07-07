@@ -1,5 +1,5 @@
-"""Seed Darvin with demo data: `python manage.py seed_demo`.
-Creates admin/darvin2026 plus two operators, companies, contacts, deals,
+"""Seed Hibiscus with demo data: `python manage.py seed_demo`.
+Creates admin/hibiscus2026 plus two operators, companies, contacts, deals,
 activities, tasks, and automations. Idempotent-ish: skips if contacts exist."""
 from datetime import timedelta
 
@@ -11,7 +11,7 @@ from crm.models import Activity, Automation, Company, Contact, Deal, Tag, Task
 
 
 class Command(BaseCommand):
-    help = "Seed demo data for Darvin CRM"
+    help = "Seed demo data for Hibiscus CRM"
 
     def handle(self, *args, **options):
         if Contact.objects.exists():
@@ -22,9 +22,9 @@ class Command(BaseCommand):
 
         admin, _ = User.objects.get_or_create(
             username="admin", defaults={"is_staff": True, "is_superuser": True, "first_name": "S.", "last_name": "Patel"})
-        admin.set_password("darvin2026"); admin.save()
-        ravi = User.objects.create_user("ravi", password="darvin2026", first_name="R.", last_name="Iyer")
-        nisha = User.objects.create_user("nisha", password="darvin2026", first_name="N.", last_name="Rao")
+        admin.set_password("hibiscus2026"); admin.save()
+        ravi = User.objects.create_user("ravi", password="hibiscus2026", first_name="R.", last_name="Iyer")
+        nisha = User.objects.create_user("nisha", password="hibiscus2026", first_name="N.", last_name="Rao")
 
         t_tex = Tag.objects.create(name="textiles", color="thulian")
         t_south = Tag.objects.create(name="south-india", color="brook")
@@ -136,4 +136,4 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(self.style.SUCCESS(
-            "Seeded. Users: admin / ravi / nisha — password: darvin2026"))
+            "Seeded. Users: admin / ravi / nisha — password: hibiscus2026"))

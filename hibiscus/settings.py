@@ -1,12 +1,12 @@
-"""Darvin CRM — Django settings."""
+"""Hibiscus CRM — Django settings."""
 from pathlib import Path
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("DARVIN_SECRET_KEY", "dev-only-insecure-key-change-me")
-DEBUG = os.environ.get("DARVIN_DEBUG", "1") == "1"
-ALLOWED_HOSTS = os.environ.get("DARVIN_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+SECRET_KEY = os.environ.get("HIBISCUS_SECRET_KEY", "dev-only-insecure-key-change-me")
+DEBUG = os.environ.get("HIBISCUS_DEBUG", "1") == "1"
+ALLOWED_HOSTS = os.environ.get("HIBISCUS_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -31,7 +31,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "darvin.urls"
+ROOT_URLCONF = "hibiscus.urls"
 
 TEMPLATES = [
     {
@@ -48,7 +48,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "darvin.wsgi.application"
+WSGI_APPLICATION = "hibiscus.wsgi.application"
 
 DATABASES = {
     "default": {
