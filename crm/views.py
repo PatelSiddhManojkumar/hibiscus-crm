@@ -221,6 +221,17 @@ class AutomationViewSet(viewsets.ModelViewSet):
         return Response({"ran": True, "tasks_created": created})
 
 
+@api_view(["POST"])
+def copilot(request):
+    """Hibiscus Copilot — plan and execute a natural-language instruction via CRM tools."""
+    from . import copilot as copilot_engine
+    instruction = (request.data.get("instruction") or "").strip()
+    if not instruction:
+        return Response({"detail": "instruction is required."}, status=400)
+    result = copilot_engine.run(instruction, request.user)
+    return Response(result)
+
+
 @api_view(["GET"])
 def report_summary(request):
     """Aggregates for the editorial report: pipeline by stage, won by month, stats."""

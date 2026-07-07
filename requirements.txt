@@ -1,3 +1,4 @@
 Django>=5.2,<6
 djangorestframework>=3.16
 whitenoise>=6.6
+anthropic>=0.69   # Copilot planner (optional — offline fallback works without a key)

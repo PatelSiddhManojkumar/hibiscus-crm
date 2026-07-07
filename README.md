@@ -20,6 +20,38 @@ python manage.py runserver
 Open http://127.0.0.1:8000 — sign in as `admin` / `ravi` / `nisha`,
 password `hibiscus2026`. Django admin lives at `/admin/`.
 
+## ✦ Copilot — the gap nobody else fills
+
+Every other CRM makes *you* the data-entry robot: drag the card, remember to log
+the call, update the field. **Hibiscus Copilot inverts that** — you give an
+instruction in plain English and it *operates the CRM through the CRM's own
+tools*, showing its work step by step (Devin-style plan → tool call → result).
+
+```
+› Move the Porto deal to won and add a task to raise the invoice
+  ◇ Two steps — advance the deal, then create the follow-up task.
+  → move_deal   {deal:"Porto Ceramics", stage:"won"}
+  ✓ Moved Retail Line Extension to Won
+  → create_task {title:"Raise invoice — Porto"}
+  ✓ Task created, assigned to you
+```
+
+`POST /api/copilot/ {"instruction": "..."}` returns `{engine, steps[], summary}`.
+Open it in the app with the **✦ Copilot** button or **⌘J**.
+
+**The planner is pluggable:**
+- With `ANTHROPIC_API_KEY` set, it runs a real Claude tool-use loop
+  (`claude-opus-4-8`) — Claude chooses which of the five CRM tools to call.
+- Without a key, a deterministic intent parser handles the common instructions,
+  so the feature is fully runnable offline. Same five tools, same execution, same
+  transcript shape — only the brain that picks the calls differs.
+
+Copilot tools (all real, all mutate the live DB as the requesting user):
+`create_contact` · `move_deal` · `create_task` · `log_activity` · `run_report`.
+
+There's also a standalone marketing landing page in `landing.html` (self-contained,
+with a live looping Copilot demo in the hero).
+
 ## What's inside
 
 **Backend — Django 5 + DRF, token auth, SQLite by default.**
@@ -34,6 +66,7 @@ password `hibiscus2026`. Django admin lives at `/admin/`.
 | `/api/tasks/` | CRUD, `?open=1`, `?assignee=me` · `POST /:id/complete/` — recurring tasks respawn on completion; tasks support `blocked_by` dependencies |
 | `/api/automations/` | CRUD · `POST /:id/run/` — ships with a working stale-proposal rule (proposal > 21 days → creates revive-or-close tasks) |
 | `GET /api/reports/summary/` | Live aggregates: pipeline by stage, won-by-month, weighted totals |
+| `POST /api/copilot/` | Agentic Copilot — plans and executes an instruction via CRM tools |
 
 Domain behavior baked in:
 - Moving a deal to a new stage resets its probability to the stage default,

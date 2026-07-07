@@ -14,6 +14,7 @@ router.register(r"automations", views.AutomationViewSet, basename="automation")
 
 urlpatterns = [
     path("auth/login/", views.login_view, name="api-login"),
+    path("copilot/", views.copilot, name="copilot"),
     path("reports/summary/", views.report_summary, name="report-summary"),
     path("", include(router.urls)),
 ]

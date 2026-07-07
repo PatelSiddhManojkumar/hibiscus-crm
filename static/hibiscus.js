@@ -87,7 +87,10 @@ function shell(active, crumbs, body) {
       <div class="topbar">
         <div class="search-pill" data-cmdk>Search anything… <kbd>⌘K</kbd></div>
         <div class="breadcrumbs">${crumbs}</div>
-        <div class="topbar-right"><span class="avatar">${initials(API.user?.username)}</span></div>
+        <div class="topbar-right">
+          <button class="copilot-btn" id="copilot-open">✦ Copilot <kbd>⌘J</kbd></button>
+          <span class="avatar">${initials(API.user?.username)}</span>
+        </div>
       </div>
       <main class="content">${body}</main>
     </div>
@@ -101,7 +104,27 @@ function shell(active, crumbs, body) {
       <div class="cmdk-item" data-go="#/reports">Reports <span class="hint">G R</span></div>
     </div></div>
     <div class="cmdk-foot"><span>⏎ select</span><span>esc close</span></div>
-  </div></div>`;
+  </div></div>
+  <div class="copilot-drawer" id="copilot-drawer">
+    <div class="copilot-head">
+      <div><b class="serif">✦ Copilot</b><span class="meta" id="copilot-engine"></span></div>
+      <button class="icon-btn" id="copilot-close">✕</button>
+    </div>
+    <div class="copilot-intro">
+      <p class="muted">Tell Copilot what to do in plain English. It plans, calls the CRM's own tools, and shows its work — then it's done.</p>
+      <div class="copilot-suggest">
+        <button data-fill="Move the Container Trial Run deal to negotiation">Move a deal →</button>
+        <button data-fill="Add a task to send Meera the revised proforma in 2 days">Create a task →</button>
+        <button data-fill="Log a call with Arjun about the uniform programme">Log a call →</button>
+        <button data-fill="How healthy is the pipeline right now?">Run a report →</button>
+      </div>
+    </div>
+    <div class="copilot-transcript" id="copilot-transcript"></div>
+    <form class="copilot-input" id="copilot-form">
+      <input id="copilot-instruction" placeholder="e.g. move the Porto deal to won and add a follow-up task" autocomplete="off">
+      <button class="btn btn-primary btn-sm" type="submit">Run</button>
+    </form>
+  </div>`;
 }
 
 function wireShell() {
@@ -112,6 +135,43 @@ function wireShell() {
   overlay?.addEventListener("click", (e) => { if (e.target === overlay) overlay.classList.remove("open"); });
   overlay?.querySelectorAll("[data-go]").forEach((el) =>
     el.addEventListener("click", () => { overlay.classList.remove("open"); location.hash = el.dataset.go; }));
+  // ── Copilot drawer ──
+  const drawer = document.getElementById("copilot-drawer");
+  const openCopilot = () => { drawer.classList.add("open"); document.getElementById("copilot-instruction").focus(); };
+  document.getElementById("copilot-open")?.addEventListener("click", openCopilot);
+  document.getElementById("copilot-close")?.addEventListener("click", () => drawer.classList.remove("open"));
+  document.querySelectorAll(".copilot-suggest button").forEach((b) =>
+    b.addEventListener("click", () => { document.getElementById("copilot-instruction").value = b.dataset.fill; document.getElementById("copilot-instruction").focus(); }));
+  document.getElementById("copilot-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const field = document.getElementById("copilot-instruction");
+    const instruction = field.value.trim();
+    if (!instruction) return;
+    const tr = document.getElementById("copilot-transcript");
+    const turn = document.createElement("div");
+    turn.className = "cp-turn";
+    turn.innerHTML = `<div class="cp-you">${esc(instruction)}</div><div class="cp-steps"><div class="cp-run"><span class="cp-dot"></span>Planning…</div></div>`;
+    tr.appendChild(turn);
+    tr.scrollTop = tr.scrollHeight;
+    field.value = "";
+    try {
+      const res = await API.post("/copilot/", { instruction });
+      document.getElementById("copilot-engine").textContent = res.engine === "claude" ? "claude-opus-4-8" : `${res.engine} planner`;
+      const icon = { thought: "◇", tool: "→", result: "✓", error: "✕" };
+      const stepsHtml = res.steps.map((s) => {
+        if (s.type === "tool") return `<div class="cp-step cp-tool"><b>→ ${esc(s.name)}</b><span class="mono">${esc(JSON.stringify(s.input))}</span></div>`;
+        if (s.type === "result") return `<div class="cp-step cp-result">✓ ${esc(s.text)}</div>`;
+        if (s.type === "error") return `<div class="cp-step cp-err">✕ ${esc(s.text)}</div>`;
+        return `<div class="cp-step cp-thought">◇ ${esc(s.text)}</div>`;
+      }).join("");
+      turn.querySelector(".cp-steps").innerHTML = stepsHtml + `<div class="cp-summary">${esc(res.summary)}</div>`;
+    } catch (err) {
+      turn.querySelector(".cp-steps").innerHTML = `<div class="cp-step cp-err">✕ ${esc(err.message)}</div>`;
+    }
+    tr.scrollTop = tr.scrollHeight;
+    render();  // refresh underlying views so mutations show immediately
+  });
+
   const input = document.getElementById("cmdk-input");
   let timer;
   input?.addEventListener("input", () => {
@@ -141,7 +201,13 @@ document.addEventListener("keydown", (e) => {
     if (overlay?.classList.contains("open")) overlay.querySelector("input").focus();
     return;
   }
-  if (e.key === "Escape") { overlay?.classList.remove("open"); document.querySelector(".modal-overlay")?.remove(); return; }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "j") {
+    e.preventDefault();
+    const d = document.getElementById("copilot-drawer");
+    if (d) { d.classList.toggle("open"); if (d.classList.contains("open")) document.getElementById("copilot-instruction")?.focus(); }
+    return;
+  }
+  if (e.key === "Escape") { overlay?.classList.remove("open"); document.querySelector(".modal-overlay")?.remove(); document.getElementById("copilot-drawer")?.classList.remove("open"); return; }
   if (e.target.matches("input, textarea, select")) return;
   if (pendingG) {
     pendingG = false;
