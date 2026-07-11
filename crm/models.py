@@ -142,3 +142,26 @@ class Automation(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class AgentRun(models.Model):
+    """A persisted Copilot run — the flight recorder for the Agent Console."""
+    instruction = models.TextField()
+    engine = models.CharField(max_length=40, default="offline")
+    steps = models.JSONField(default=list)       # the plan -> tool -> result transcript
+    pending = models.JSONField(default=list)     # gated actions awaiting approval
+    summary = models.TextField(blank=True)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Run {self.id}: {self.instruction[:50]}"
+
+    @property
+    def status(self):
+        if any(not g.get("approved") and not g.get("cancelled") for g in self.pending):
+            return "awaiting_approval"
+        return "done"

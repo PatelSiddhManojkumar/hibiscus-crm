@@ -10,9 +10,9 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .models import Activity, Automation, Company, Contact, Deal, Tag, Task
+from .models import Activity, AgentRun, Automation, Company, Contact, Deal, Tag, Task
 from .serializers import (
-    ActivitySerializer, AutomationSerializer, CompanySerializer,
+    ActivitySerializer, AgentRunSerializer, AutomationSerializer, CompanySerializer,
     ContactSerializer, DealSerializer, TagSerializer, TaskSerializer,
     UserSerializer,
 )
@@ -228,8 +228,76 @@ def copilot(request):
     instruction = (request.data.get("instruction") or "").strip()
     if not instruction:
         return Response({"detail": "instruction is required."}, status=400)
-    result = copilot_engine.run(instruction, request.user)
+    return Response(copilot_engine.run(instruction, request.user))
+
+
+@api_view(["POST"])
+def copilot_approve(request):
+    """Approve or cancel a gated Copilot action."""
+    from . import copilot as copilot_engine
+    result = copilot_engine.approve(
+        int(request.data.get("run_id")), int(request.data.get("gate_index")),
+        request.user, cancel=bool(request.data.get("cancel")),
+    )
     return Response(result)
+
+
+class AgentRunViewSet(viewsets.ReadOnlyModelViewSet):
+    """The Agent Console — history of every Copilot run (the flight recorder)."""
+    serializer_class = AgentRunSerializer
+    queryset = AgentRun.objects.select_related("actor").all()
+
+
+@api_view(["GET"])
+def insights(request):
+    """Rule-based analytics: weighted forecast, at-risk deals, next-best-actions.
+    No ML — derived from stage, probability, stage age, and last-contact recency."""
+    now = timezone.now()
+    open_deals = Deal.objects.exclude(stage__in=["won", "lost"]).select_related("contact", "company", "owner")
+
+    forecast = open_deals.aggregate(total=Sum("value"), weighted=Sum(WEIGHTED))
+    won_this_q = Deal.objects.filter(stage="won", stage_changed_at__gte=now - timedelta(days=90)).aggregate(t=Sum("value"))["t"] or 0
+
+    # At-risk: sitting in Proposal/Negotiation past a stage-specific age threshold.
+    thresholds = {"proposal": 21, "negotiation": 14, "qualified": 30}
+    at_risk = []
+    for d in open_deals:
+        limit = thresholds.get(d.stage)
+        if not limit:
+            continue
+        age = (now - d.stage_changed_at).days
+        if age > limit:
+            at_risk.append({
+                "id": d.id, "name": d.name, "company": d.company.name if d.company else None,
+                "stage": d.stage, "value": float(d.value), "age_days": age, "over_by": age - limit,
+                "owner": f"{d.owner.first_name} {d.owner.last_name}".strip() if d.owner else None,
+            })
+    at_risk.sort(key=lambda x: x["over_by"], reverse=True)
+
+    # Next-best-actions: concrete, ranked suggestions the user (or Copilot) can act on.
+    actions = []
+    for d in at_risk[:3]:
+        actions.append({"kind": "revive_deal", "priority": "high",
+                        "label": f"“{d['name']}” has sat in {d['stage']} for {d['age_days']} days — nudge it or close it.",
+                        "suggest": f"draft an email to {d['company'] or d['name']} about {d['name']}"})
+    stale = Contact.objects.filter(stage__in=["prospect", "customer"], last_contacted_at__lt=now - timedelta(days=14)).order_by("last_contacted_at")[:3]
+    for c in stale:
+        days = (now - c.last_contacted_at).days if c.last_contacted_at else None
+        actions.append({"kind": "reconnect", "priority": "medium",
+                        "label": f"No contact with {c.name} in {days} days — reconnect.",
+                        "suggest": f"summarize {c.name}"})
+    overdue = Task.objects.filter(completed_at__isnull=True, due_at__lt=now).count()
+    if overdue:
+        actions.append({"kind": "clear_overdue", "priority": "high",
+                        "label": f"{overdue} task(s) are overdue — clear them or reschedule.", "suggest": None})
+
+    return Response({
+        "generated_at": now,
+        "forecast": {"open": float(forecast["total"] or 0), "weighted": float(forecast["weighted"] or 0),
+                     "won_90d": float(won_this_q)},
+        "at_risk": at_risk,
+        "next_best_actions": actions,
+    })
 
 
 @api_view(["GET"])

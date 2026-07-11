@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import Activity, Automation, Company, Contact, Deal, Tag, Task
+from .models import Activity, AgentRun, Automation, Company, Contact, Deal, Tag, Task
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -80,6 +80,16 @@ class TaskSerializer(serializers.ModelSerializer):
             "assignee", "assignee_detail", "due_at", "completed_at",
             "recurrence", "blocked_by", "blocked_by_title", "created_at",
         ]
+
+
+class AgentRunSerializer(serializers.ModelSerializer):
+    actor_detail = UserSerializer(source="actor", read_only=True)
+    status = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = AgentRun
+        fields = ["id", "instruction", "engine", "steps", "pending", "summary",
+                  "actor", "actor_detail", "status", "created_at"]
 
 
 class AutomationSerializer(serializers.ModelSerializer):

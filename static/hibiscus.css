@@ -506,3 +506,24 @@ td .name { font-weight: 500; color: var(--amaranth-deep); }
   border:1px solid var(--border); border-radius:var(--r-input); padding:9px 12px; }
 .copilot-input input:focus { outline:none; border-color:var(--amaranth); }
 @media (max-width:900px){ .copilot-drawer{ width:100vw; } .copilot-btn kbd{ display:none; } }
+
+/* ═══ Copilot gate ═══ */
+.cp-gate{background:rgba(201,162,39,.10);border:1px solid rgba(201,162,39,.45);border-radius:8px;padding:11px 12px;display:flex;flex-direction:column;gap:8px}
+.cp-gate-h{font-size:12px;font-weight:600;color:#8a6d12;letter-spacing:.3px}
+.cp-gate-preview{font-size:12px;color:var(--olive-ink);white-space:pre-wrap;background:var(--chalk);border:1px solid var(--border);border-radius:6px;padding:8px 10px;max-height:140px;overflow:auto}
+.cp-gate-actions{display:flex;gap:8px}
+.cp-gate-note{font-size:11px;color:var(--olive);font-style:italic}
+
+/* ═══ Insights ═══ */
+.nba-list{display:flex;flex-direction:column;gap:8px}
+.nba{display:flex;align-items:center;gap:12px;background:var(--chalk-2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.nba-l{flex:1;font-size:14px;color:var(--olive-ink)}
+.nba .tag{text-transform:uppercase}
+
+/* ═══ Agent console ═══ */
+.run-card{background:var(--chalk-2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.run-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.run-q{font-weight:500;color:var(--amaranth-deep);font-size:14.5px}
+.run-head .meta{margin-left:auto}
+.run-steps{padding-left:2px}
+.run-steps .cp-gate-note{color:var(--olive)}

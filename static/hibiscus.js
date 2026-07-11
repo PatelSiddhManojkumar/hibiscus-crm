@@ -63,8 +63,43 @@ function toast(msg) {
 const NAV = [
   ["Work", [["#/tasks", "Inbox & Today", "today"]]],
   ["Objects", [["#/contacts", "Contacts", "contacts"], ["#/deals", "Deals", "deals"], ["#/tasks", "Tasks", "tasks"]]],
-  ["Insights", [["#/reports", "Reports", "reports"], ["#/automations", "Automations", "automations"]]],
+  ["Intelligence", [["#/insights", "Insights", "insights"], ["#/agent", "Agent console", "agent"],
+                    ["#/reports", "Reports", "reports"], ["#/automations", "Automations", "automations"]]],
 ];
+
+// Shared renderer for a Copilot transcript. interactive=true wires gate buttons.
+function cpStepsHtml(steps, opts) {
+  opts = opts || {};
+  return (steps || []).map((s) => {
+    if (s.type === "tool") return `<div class="cp-step cp-tool"><b>→ ${esc(s.name)}</b><span class="mono">${esc(JSON.stringify(s.input))}</span></div>`;
+    if (s.type === "result") return `<div class="cp-step cp-result">${esc(s.text)}</div>`;
+    if (s.type === "error") return `<div class="cp-step cp-err">✕ ${esc(s.text)}</div>`;
+    if (s.type === "gate") {
+      const actions = opts.interactive
+        ? `<div class="cp-gate-actions"><button class="btn btn-primary btn-sm cp-approve">Approve &amp; send</button><button class="btn btn-ghost btn-sm cp-cancel">Cancel</button></div>`
+        : `<div class="cp-gate-note">Needed approval</div>`;
+      return `<div class="cp-step cp-gate" data-run="${opts.runId || ""}" data-gate="${s.gate_index}">
+        <div class="cp-gate-h">▲ Approval needed · <b>${esc(s.name)}</b></div>
+        <div class="cp-gate-preview mono">${esc(s.preview || JSON.stringify(s.input))}</div>${actions}</div>`;
+    }
+    return `<div class="cp-step cp-thought">◇ ${esc(s.text)}</div>`;
+  }).join("");
+}
+function wireGates(container) {
+  container.querySelectorAll(".cp-gate").forEach((g) => {
+    const runId = g.dataset.run, gi = g.dataset.gate;
+    const approve = g.querySelector(".cp-approve"), cancel = g.querySelector(".cp-cancel");
+    approve && approve.addEventListener("click", async () => {
+      const r = await API.post("/copilot/approve/", { run_id: runId, gate_index: gi });
+      g.querySelector(".cp-gate-actions").outerHTML = `<div class="cp-result">${esc(r.result)}</div>`;
+      render();
+    });
+    cancel && cancel.addEventListener("click", async () => {
+      await API.post("/copilot/approve/", { run_id: runId, gate_index: gi, cancel: true });
+      g.querySelector(".cp-gate-actions").outerHTML = `<div class="muted" style="font-size:13px">Cancelled.</div>`;
+    });
+  });
+}
 
 function shell(active, crumbs, body) {
   const nav = NAV.map(([label, items]) => `
@@ -157,14 +192,9 @@ function wireShell() {
     try {
       const res = await API.post("/copilot/", { instruction });
       document.getElementById("copilot-engine").textContent = res.engine === "claude" ? "claude-opus-4-8" : `${res.engine} planner`;
-      const icon = { thought: "◇", tool: "→", result: "✓", error: "✕" };
-      const stepsHtml = res.steps.map((s) => {
-        if (s.type === "tool") return `<div class="cp-step cp-tool"><b>→ ${esc(s.name)}</b><span class="mono">${esc(JSON.stringify(s.input))}</span></div>`;
-        if (s.type === "result") return `<div class="cp-step cp-result">✓ ${esc(s.text)}</div>`;
-        if (s.type === "error") return `<div class="cp-step cp-err">✕ ${esc(s.text)}</div>`;
-        return `<div class="cp-step cp-thought">◇ ${esc(s.text)}</div>`;
-      }).join("");
-      turn.querySelector(".cp-steps").innerHTML = stepsHtml + `<div class="cp-summary">${esc(res.summary)}</div>`;
+      const stepsEl = turn.querySelector(".cp-steps");
+      stepsEl.innerHTML = cpStepsHtml(res.steps, { interactive: true, runId: res.run_id }) + `<div class="cp-summary">${esc(res.summary)}</div>`;
+      wireGates(stepsEl);
     } catch (err) {
       turn.querySelector(".cp-steps").innerHTML = `<div class="cp-step cp-err">✕ ${esc(err.message)}</div>`;
     }
@@ -211,7 +241,7 @@ document.addEventListener("keydown", (e) => {
   if (e.target.matches("input, textarea, select")) return;
   if (pendingG) {
     pendingG = false;
-    const r = { c: "#/contacts", d: "#/deals", t: "#/tasks", r: "#/reports", a: "#/automations" }[e.key.toLowerCase()];
+    const r = { c: "#/contacts", d: "#/deals", t: "#/tasks", r: "#/reports", a: "#/automations", i: "#/insights", g: "#/agent" }[e.key.toLowerCase()];
     if (r) location.hash = r;
     return;
   }
@@ -564,6 +594,65 @@ async function automationsView() {
   }));
 }
 
+async function insightsView() {
+  const d = await API.get("/insights/");
+  const prio = { high: "", medium: "olive" };
+  const risk = d.at_risk.map((r) => `<tr>
+    <td class="name">${esc(r.name)}</td><td>${esc(r.company || "—")}</td>
+    <td><span class="tag">${esc(r.stage)}</span></td><td class="mono">${inr(r.value)}</td>
+    <td class="mono">${r.age_days}d</td>
+    <td><span class="tag" style="background:rgba(147,59,91,.12);color:var(--amaranth)">+${r.over_by}d over</span></td></tr>`).join("");
+  const nba = d.next_best_actions.map((a) => `
+    <div class="nba">
+      <span class="tag ${prio[a.priority] || ""}">${a.priority}</span>
+      <span class="nba-l">${esc(a.label)}</span>
+      ${a.suggest ? `<button class="btn btn-ghost btn-sm nba-run" data-suggest="${esc(a.suggest)}">Run in Copilot →</button>` : ""}
+    </div>`).join("");
+  root.innerHTML = shell("insights", "INTELLIGENCE / <b>INSIGHTS</b>", `
+    <div class="page-head"><h1>Insights</h1><span class="meta">rule-based · live · ${new Date(d.generated_at).toLocaleString("en-IN")}</span></div>
+    <div class="stat-row">
+      <div class="stat"><div class="n">${inr(d.forecast.open)}</div><div class="l">Open pipeline</div></div>
+      <div class="stat"><div class="n">${inr(d.forecast.weighted)}</div><div class="l">Weighted forecast</div></div>
+      <div class="stat"><div class="n">${inr(d.forecast.won_90d)}</div><div class="l">Won, last 90 days</div></div>
+    </div>
+    <h2 class="serif" style="font-size:20px;font-weight:400;margin:8px 0 12px">Next best actions</h2>
+    <div class="nba-list">${nba || '<p class="muted">Nothing needs attention — nicely done.</p>'}</div>
+    <h2 class="serif" style="font-size:20px;font-weight:400;margin:32px 0 12px">Deals at risk<span class="meta" style="margin-left:8px">${d.at_risk.length} sitting too long in stage</span></h2>
+    <div class="table-wrap"><table class="editorial">
+      <thead><tr><th>Deal</th><th>Company</th><th>Stage</th><th>Value</th><th>Age in stage</th><th>Risk</th></tr></thead>
+      <tbody>${risk || '<tr><td colspan="6" class="muted">No deals are overdue in stage.</td></tr>'}</tbody></table></div>`);
+  wireShell();
+  document.querySelectorAll(".nba-run").forEach((b) => b.addEventListener("click", () => {
+    document.getElementById("copilot-drawer").classList.add("open");
+    const f = document.getElementById("copilot-instruction");
+    f.value = b.dataset.suggest; f.focus();
+  }));
+}
+
+async function agentView() {
+  const data = await API.get("/agent-runs/");
+  const runs = data.results || [];
+  const pill = { done: "green", awaiting_approval: "" };
+  const body = runs.map((r) => `
+    <div class="run-card">
+      <div class="run-head">
+        <span class="run-q">${esc(r.instruction)}</span>
+        <span class="tag ${pill[r.status] || ""}">${r.status.replace("_", " ")}</span>
+        <span class="meta">${esc(r.engine)} · ${ago(r.created_at)}</span>
+      </div>
+      <div class="cp-steps run-steps">${cpStepsHtml(r.steps)}${r.summary ? `<div class="cp-summary">${esc(r.summary)}</div>` : ""}</div>
+    </div>`).join("");
+  root.innerHTML = shell("agent", "INTELLIGENCE / <b>AGENT CONSOLE</b>", `
+    <div class="page-head"><h1>Agent console</h1><span class="meta">${data.count} runs · every Copilot action, auditable</span>
+      <div class="actions"><button class="btn btn-primary btn-sm" id="agent-new">✦ New instruction</button></div></div>
+    ${body || '<div class="empty"><h3>No runs yet.</h3><p>Press ⌘J and tell Copilot what to do — every run is recorded here.</p></div>'}`);
+  wireShell();
+  document.getElementById("agent-new")?.addEventListener("click", () => {
+    document.getElementById("copilot-drawer").classList.add("open");
+    document.getElementById("copilot-instruction").focus();
+  });
+}
+
 // ── Router ───────────────────────────────────────────────────
 async function render() {
   const hash = location.hash || "#/contacts";
@@ -578,6 +667,8 @@ async function render() {
     if (seg[0] === "tasks") return await tasksView();
     if (seg[0] === "reports") return await reportsView();
     if (seg[0] === "automations") return await automationsView();
+    if (seg[0] === "insights") return await insightsView();
+    if (seg[0] === "agent") return await agentView();
     return await contactsView(params);
   } catch (err) {
     if (err.message !== "Signed out") {

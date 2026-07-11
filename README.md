@@ -42,16 +42,34 @@ Open it in the app with the **✦ Copilot** button or **⌘J**.
 
 **The planner is pluggable:**
 - With `ANTHROPIC_API_KEY` set, it runs a real Claude tool-use loop
-  (`claude-opus-4-8`) — Claude chooses which of the five CRM tools to call.
+  (`claude-opus-4-8`) — Claude chooses which CRM tools to call.
 - Without a key, a deterministic intent parser handles the common instructions,
-  so the feature is fully runnable offline. Same five tools, same execution, same
+  so the feature is fully runnable offline. Same tools, same execution, same
   transcript shape — only the brain that picks the calls differs.
 
-Copilot tools (all real, all mutate the live DB as the requesting user):
-`create_contact` · `move_deal` · `create_task` · `log_activity` · `run_report`.
+**Eleven tools** (all real, all scoped to the requesting user):
+`create_contact` · `update_contact` · `create_deal` · `move_deal` · `update_deal`
+· `create_task` · `log_activity` · `send_email` · `search` · `summarize_contact`
+· `run_report`. Read-only tools (`search`, `summarize_contact`, `run_report`) let
+the agent look things up before it acts.
 
-There's also a standalone marketing landing page in `landing.html` (self-contained,
-with a live looping Copilot demo in the hero).
+**Approval gates.** Outbound / hard-to-reverse actions (`send_email`) don't run
+automatically — Copilot *queues* them and the transcript shows a gate the operator
+must **Approve & send** or **Cancel** (`POST /api/copilot/approve/`). Reversible
+actions just run and report. This is the trust model: the color of the step tells
+you whether you're being asked.
+
+**Agent Console** (`/app#/agent`, `GET /api/agent-runs/`). Every run is persisted
+as an `AgentRun` — instruction, engine, full step transcript, gate status,
+timestamp — and browsable as an auditable flight recorder.
+
+**Insights** (`/app#/insights`, `GET /api/insights/`). Rule-based analytics from
+the data you already have: weighted forecast, deals **at risk** (ranked by how far
+past a stage-age threshold they've sat), and **next-best-actions** — each with a
+"Run in Copilot →" button that hands the suggestion straight to the agent.
+
+There's also a standalone marketing landing page (`landing.html`, served at `/`)
+with a live looping Copilot demo in the hero.
 
 ## What's inside
 
@@ -68,6 +86,9 @@ with a live looping Copilot demo in the hero).
 | `/api/automations/` | CRUD · `POST /:id/run/` — ships with a working stale-proposal rule (proposal > 21 days → creates revive-or-close tasks) |
 | `GET /api/reports/summary/` | Live aggregates: pipeline by stage, won-by-month, weighted totals |
 | `POST /api/copilot/` | Agentic Copilot — plans and executes an instruction via CRM tools |
+| `POST /api/copilot/approve/` | Approve or cancel a gated Copilot action |
+| `/api/agent-runs/` | Agent Console — persisted history of every Copilot run |
+| `GET /api/insights/` | Weighted forecast, at-risk deals, next-best-actions |
 
 Domain behavior baked in:
 - Moving a deal to a new stage resets its probability to the stage default,
